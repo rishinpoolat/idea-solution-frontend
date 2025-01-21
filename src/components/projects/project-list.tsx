@@ -4,9 +4,14 @@ import { useState, useEffect } from 'react';
 import { ProjectCard } from './project-card';
 import { ProjectDetails } from './project-details';
 import { Project, getProjects } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
+
+const ITEMS_PER_PAGE = 15;
 
 export function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [visibleProjects, setVisibleProjects] = useState<number>(ITEMS_PER_PAGE);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,6 +39,10 @@ export function ProjectList() {
     setDetailsOpen(true);
   };
 
+  const handleLoadMore = () => {
+    setVisibleProjects(prev => prev + ITEMS_PER_PAGE);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -50,10 +59,12 @@ export function ProjectList() {
     );
   }
 
+  const hasMoreProjects = visibleProjects < projects.length;
+
   return (
-    <>
+    <div className="space-y-8">
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
+        {projects.slice(0, visibleProjects).map((project) => (
           <ProjectCard
             key={project.id}
             project={project}
@@ -62,11 +73,25 @@ export function ProjectList() {
         ))}
       </div>
 
+      {hasMoreProjects && (
+        <div className="flex justify-center pt-4">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleLoadMore}
+            className="flex items-center gap-2"
+          >
+            View More Projects
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
       <ProjectDetails
         project={selectedProject}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
       />
-    </>
+    </div>
   );
 }
