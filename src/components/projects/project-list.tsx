@@ -1,0 +1,72 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { ProjectCard } from './project-card';
+import { ProjectDetails } from './project-details';
+import { Project, getProjects } from '@/lib/api';
+
+export function ProjectList() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const data = await getProjects();
+        setProjects(data);
+      } catch (err) {
+        setError('Failed to load projects. Please try again later.');
+        console.error('Error loading projects:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProjects();
+  }, []);
+
+  const handleViewDetails = (projectId: number) => {
+    const project = projects.find(p => p.id === projectId) || null;
+    setSelectedProject(project);
+    setDetailsOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 p-4">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onViewDetails={handleViewDetails}
+          />
+        ))}
+      </div>
+
+      <ProjectDetails
+        project={selectedProject}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
+    </>
+  );
+}
