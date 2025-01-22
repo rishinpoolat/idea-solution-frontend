@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ProjectCard } from './project-card';
 import { ProjectDetails } from './project-details';
-import { Project } from '@/types/api';  // Move type to types folder
+import { Project } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export function ProjectList() {
     fetchProjects();
   }, []);
 
-  const handleViewDetails = (projectId: number) => {
+  const handleViewDetails = (projectId: string) => {  // Changed to string for UUID
     const project = projects.find(p => p.id === projectId) || null;
     setSelectedProject(project);
     setDetailsOpen(true);

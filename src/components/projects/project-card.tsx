@@ -3,29 +3,14 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  difficulty?: string;
-  estimatedHours?: number;
-  techStack?: string[];
-  learningOutcomes?: string[];
-  implementationSteps?: string[];
-  solutions: string;
-  isAiGenerated?: boolean;
-  url?: string;
-  created_at?: string;
-}
-
+import { Project } from '@/types/api';
 
 interface ProjectCardProps {
   project: Project;
-  onClick: (project: Project) => void;
+  onViewDetails: (projectId: string) => void;  // Changed to string for UUID
 }
 
-export function ProjectCard({ project, onClick }: ProjectCardProps) {
+export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
   // Truncate description to first 100 characters
   const truncatedDescription = project.description 
     ? project.description.slice(0, 100) + (project.description.length > 100 ? '...' : '')
@@ -63,7 +48,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         <Button 
           size="sm" 
           className="flex items-center gap-2 ml-auto"
-          onClick={() => onClick(project)}
+          onClick={() => onViewDetails(project.id)}
         >
           View More
           <ChevronRight className="w-4 h-4" />

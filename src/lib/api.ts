@@ -1,17 +1,4 @@
-export interface Project {
-  id: number;
-  title: string;
-  description: string;
-  difficulty?: string;
-  estimatedHours?: number;
-  techStack?: string[];
-  learningOutcomes?: string[];
-  implementationSteps?: string[];
-  solutions: string;
-  isAiGenerated?: boolean;
-  url?: string;
-  created_at?: string;
-}
+import { Project } from '@/types/api';
 
 export interface ApiResponse<T> {
   data: T;
@@ -25,3 +12,5 @@ export interface ProjectsResponse {
 export interface ProjectResponse {
   project: Project;
 }
+
+export type { Project };

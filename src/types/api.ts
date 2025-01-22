@@ -1,5 +1,5 @@
 export interface Project {
-  id: number;
+  id: string;  // Changed to string for UUID
   title: string;
   description: string;
   difficulty?: string;
@@ -7,10 +7,10 @@ export interface Project {
   techStack?: string[];
   learningOutcomes?: string[];
   implementationSteps?: string[];
-  solutions?: string;  // Added this field
+  solutions: string;
   isAiGenerated?: boolean;
-  url?: string;  // Added this in case it's used
-  created_at?: string;  // Added this for timestamps
+  url?: string;
+  created_at?: string;
 }
 
 export interface RecommendationRequest {
