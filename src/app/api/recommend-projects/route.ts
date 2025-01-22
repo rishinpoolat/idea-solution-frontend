@@ -13,25 +13,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Clean up search terms and create a more flexible search pattern
-    const searchTerms = body.prompt
-      .toLowerCase()
-      .split(' ')
-      .filter(term => term.length > 2)
-      .map(term => term.replace(/[^\w\s]/g, ''))
-      .join(' & ');
+    const searchTerm = body.prompt.toLowerCase().trim();
 
+    // Query using text search on the materialized view
     const { data: projects, error } = await supabase
       .from('project_materialized_view')
       .select('*')
-      .textSearch('search_vector', searchTerms, {
-        type: 'websearch',
-        config: 'english'
+      .textSearch('search_vector', searchTerm, {
+        type: 'plain' // Use plain to match individual words
       })
-      .limit(6)
-      .order('created_at', { ascending: false });
+      .limit(6);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+
+    // If no results with text search, try fallback with ILIKE
+    if (!projects || projects.length === 0) {
+      const { data: fallbackProjects, error: fallbackError } = await supabase
+        .from('project_materialized_view')
+        .select('*')
+        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,solutions.ilike.%${searchTerm}%`)
+        .limit(6);
+
+      if (fallbackError) throw fallbackError;
+      return NextResponse.json({ projects: fallbackProjects || [] });
+    }
 
     return NextResponse.json({ projects });
   } catch (error) {
