@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Modal } from '@/components/ui/modal';
 import { Loader2, Search, ArrowRight } from 'lucide-react';
 
-interface  {
+interface Project {
   id: number;
   title: string;
   description: string;
@@ -25,25 +25,25 @@ interface  {
 
 const Recommender = () => {
   const [prompt, setPrompt] = useState('');
-  const [s, sets] = useState<[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [selected, setSelected] = useState< | null>(null);
+  const [selected, setSelected] = useState<Project | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchAlls();
+    fetchAllProjects();
   }, []);
 
-  const fetchAlls = async () => {
+  const fetchAllProjects = async () => {
     try {
-      const response = await fetch('/api/s');
-      if (!response.ok) throw new Error('Failed to fetch s');
+      const response = await fetch('/api/projects');
+      if (!response.ok) throw new Error('Failed to fetch projects');
       const data = await response.json();
-      sets(data.s);
+      setProjects(data.projects);
     } catch (err) {
-      setError('Failed to load s. Please refresh the page.');
+      setError('Failed to load projects. Please refresh the page.');
     }
   };
 
@@ -51,7 +51,7 @@ const Recommender = () => {
     e.preventDefault();
     if (!prompt.trim()) {
       setIsSearching(false);
-      fetchAlls();
+      fetchAllProjects();
       return;
     }
 
@@ -60,7 +60,7 @@ const Recommender = () => {
     setIsSearching(true);
     
     try {
-      const response = await fetch('/api/recommend-s', {
+      const response = await fetch('/api/recommend-projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,16 +71,16 @@ const Recommender = () => {
       if (!response.ok) throw new Error('Failed to get recommendations');
       
       const data = await response.json();
-      sets(data.s);
+      setProjects(data.projects);
     } catch (err) {
-      setError('Failed to fetch  recommendations. Please try again.');
+      setError('Failed to fetch project recommendations. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const openModal = (: ) => {
-    setSelected();
+  const openModal = (project: Project) => {
+    setSelected(project);
     setIsModalOpen(true);
   };
 
@@ -94,7 +94,7 @@ const Recommender = () => {
               <Input
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Search for s (e.g., 'React web application')"
+                placeholder="Search for projects (e.g., 'React web application')"
                 className="pl-10 h-12 text-lg rounded-lg"
               />
               <Search className="absolute left-3 top-4 h-4 w-4 text-gray-400" />
@@ -106,7 +106,7 @@ const Recommender = () => {
                 className="h-12 px-6 text-base"
               >
                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Search className="mr-2 h-5 w-5" />}
-                {loading ? 'Searching...' : 'Search s'}
+                {loading ? 'Searching...' : 'Search Projects'}
               </Button>
               {isSearching && (
                 <Button 
@@ -114,7 +114,7 @@ const Recommender = () => {
                   onClick={() => {
                     setPrompt('');
                     setIsSearching(false);
-                    fetchAlls();
+                    fetchAllProjects();
                   }}
                   className="h-12"
                 >
@@ -132,23 +132,23 @@ const Recommender = () => {
         </Alert>
       )}
 
-      {/* s Grid */}
+      {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {s.map(() => (
+        {projects.map((project) => (
           <Card 
-            key={.id} 
+            key={project.id} 
             className="flex flex-col hover:shadow-lg transition-all duration-300 group rounded-xl overflow-hidden border-gray-100"
           >
             <CardHeader className="bg-gray-50 group-hover:bg-gray-100 transition-colors">
               <CardTitle className="text-xl">
-                {.title}
+                {project.title}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col pt-6">
               <div className="space-y-6 flex-1">
                 <div>
                   <p className="text-gray-600 text-sm line-clamp-3">
-                    {.description}
+                    {project.description}
                   </p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ const Recommender = () => {
               <div className="mt-4 flex justify-end">
                 <Button
                   variant="ghost"
-                  onClick={() => openModal()}
+                  onClick={() => openModal(project)}
                   className="text-blue-600 hover:text-blue-800"
                 >
                   <span>View More</span>
@@ -168,7 +168,7 @@ const Recommender = () => {
         ))}
       </div>
 
-      {/*  Details Modal */}
+      {/* Project Details Modal */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {
@@ -188,7 +188,7 @@ const Recommender = () => {
               </p>
             </div>
 
-            {/* Additional  Details */}
+            {/* Additional Project Details */}
             {selected.techStack && selected.techStack.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Technologies</h3>
@@ -228,24 +228,24 @@ const Recommender = () => {
       </Modal>
 
       {/* Empty State */}
-      {s.length === 0 && !loading && (
+      {projects.length === 0 && !loading && (
         <div className="text-center py-16 bg-white rounded-xl border">
           <div className="mb-4">
             <Search className="h-12 w-12 text-gray-400 mx-auto" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No s found</h3>
-          <p className="text-gray-600">Try adjusting your search terms or browse all s</p>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">No projects found</h3>
+          <p className="text-gray-600">Try adjusting your search terms or browse all projects</p>
           {isSearching && (
             <Button 
               variant="outline" 
               onClick={() => {
                 setPrompt('');
                 setIsSearching(false);
-                fetchAlls();
+                fetchAllProjects();
               }}
               className="mt-4"
             >
-              View All s
+              View All Projects
             </Button>
           )}
         </div>
