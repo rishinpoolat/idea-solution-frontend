@@ -17,7 +17,7 @@ interface Project {
   techStack?: string[];
   learningOutcomes?: string[];
   implementationSteps?: string[];
-  solutions?: string;
+  solutions: string;
   isAiGenerated?: boolean;
   url?: string;
   created_at?: string;
