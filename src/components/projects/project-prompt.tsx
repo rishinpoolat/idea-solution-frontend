@@ -59,7 +59,9 @@ export function ProjectPrompt() {
     }
   };
 
-  const handleViewDetails = (project: Project) => {
+  const handleViewDetails = (projectId: string) => {
+    const project = [...(results?.aiSuggestions || []), ...(results?.recommendations || [])]
+      .find(p => p.id === projectId) || null;
     setSelectedProject(project);
     setDetailsOpen(true);
   };
@@ -108,7 +110,7 @@ export function ProjectPrompt() {
                   <ProjectCard
                     key={project.id}
                     project={project}
-                    onClick={() => handleViewDetails(project)}
+                    onViewDetails={() => handleViewDetails(project.id)}
                   />
                 ))}
               </div>
@@ -124,7 +126,7 @@ export function ProjectPrompt() {
                   <ProjectCard
                     key={project.id}
                     project={project}
-                    onClick={() => handleViewDetails(project)}
+                    onViewDetails={() => handleViewDetails(project.id)}
                   />
                 ))}
               </div>
