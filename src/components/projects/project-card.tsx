@@ -3,7 +3,22 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
-import { Project } from '@/lib/api';
+
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  difficulty?: string;
+  estimatedHours?: number;
+  techStack?: string[];
+  learningOutcomes?: string[];
+  implementationSteps?: string[];
+  solutions: string;
+  isAiGenerated?: boolean;
+  url?: string;
+  created_at?: string;
+}
+
 
 interface ProjectCardProps {
   project: Project;

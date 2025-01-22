@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Modal } from '@/components/ui/modal';
 import { Loader2, Search, ArrowRight } from 'lucide-react';
 
-interface Project {
+interface  {
   id: number;
   title: string;
   description: string;
@@ -23,27 +23,27 @@ interface Project {
   created_at?: string;
 }
 
-const ProjectRecommender = () => {
+const Recommender = () => {
   const [prompt, setPrompt] = useState('');
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [s, sets] = useState<[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selected, setSelected] = useState< | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchAllProjects();
+    fetchAlls();
   }, []);
 
-  const fetchAllProjects = async () => {
+  const fetchAlls = async () => {
     try {
-      const response = await fetch('/api/projects');
-      if (!response.ok) throw new Error('Failed to fetch projects');
+      const response = await fetch('/api/s');
+      if (!response.ok) throw new Error('Failed to fetch s');
       const data = await response.json();
-      setProjects(data.projects);
+      sets(data.s);
     } catch (err) {
-      setError('Failed to load projects. Please refresh the page.');
+      setError('Failed to load s. Please refresh the page.');
     }
   };
 
@@ -51,7 +51,7 @@ const ProjectRecommender = () => {
     e.preventDefault();
     if (!prompt.trim()) {
       setIsSearching(false);
-      fetchAllProjects();
+      fetchAlls();
       return;
     }
 
@@ -60,7 +60,7 @@ const ProjectRecommender = () => {
     setIsSearching(true);
     
     try {
-      const response = await fetch('/api/recommend-projects', {
+      const response = await fetch('/api/recommend-s', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,16 +71,16 @@ const ProjectRecommender = () => {
       if (!response.ok) throw new Error('Failed to get recommendations');
       
       const data = await response.json();
-      setProjects(data.projects);
+      sets(data.s);
     } catch (err) {
-      setError('Failed to fetch project recommendations. Please try again.');
+      setError('Failed to fetch  recommendations. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const openProjectModal = (project: Project) => {
-    setSelectedProject(project);
+  const openModal = (: ) => {
+    setSelected();
     setIsModalOpen(true);
   };
 
@@ -94,7 +94,7 @@ const ProjectRecommender = () => {
               <Input
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Search for projects (e.g., 'React web application')"
+                placeholder="Search for s (e.g., 'React web application')"
                 className="pl-10 h-12 text-lg rounded-lg"
               />
               <Search className="absolute left-3 top-4 h-4 w-4 text-gray-400" />
@@ -106,7 +106,7 @@ const ProjectRecommender = () => {
                 className="h-12 px-6 text-base"
               >
                 {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Search className="mr-2 h-5 w-5" />}
-                {loading ? 'Searching...' : 'Search Projects'}
+                {loading ? 'Searching...' : 'Search s'}
               </Button>
               {isSearching && (
                 <Button 
@@ -114,7 +114,7 @@ const ProjectRecommender = () => {
                   onClick={() => {
                     setPrompt('');
                     setIsSearching(false);
-                    fetchAllProjects();
+                    fetchAlls();
                   }}
                   className="h-12"
                 >
@@ -132,23 +132,23 @@ const ProjectRecommender = () => {
         </Alert>
       )}
 
-      {/* Projects Grid */}
+      {/* s Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
+        {s.map(() => (
           <Card 
-            key={project.id} 
+            key={.id} 
             className="flex flex-col hover:shadow-lg transition-all duration-300 group rounded-xl overflow-hidden border-gray-100"
           >
             <CardHeader className="bg-gray-50 group-hover:bg-gray-100 transition-colors">
               <CardTitle className="text-xl">
-                {project.title}
+                {.title}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col pt-6">
               <div className="space-y-6 flex-1">
                 <div>
                   <p className="text-gray-600 text-sm line-clamp-3">
-                    {project.description}
+                    {.description}
                   </p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ const ProjectRecommender = () => {
               <div className="mt-4 flex justify-end">
                 <Button
                   variant="ghost"
-                  onClick={() => openProjectModal(project)}
+                  onClick={() => openModal()}
                   className="text-blue-600 hover:text-blue-800"
                 >
                   <span>View More</span>
@@ -168,32 +168,32 @@ const ProjectRecommender = () => {
         ))}
       </div>
 
-      {/* Project Details Modal */}
+      {/*  Details Modal */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {
           setIsModalOpen(false);
-          setSelectedProject(null);
+          setSelected(null);
         }}
       >
-        {selectedProject && (
+        {selected && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-semibold mb-4">{selectedProject.title}</h2>
+              <h2 className="text-2xl font-semibold mb-4">{selected.title}</h2>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-2">Description</h3>
               <p className="text-gray-600 text-sm whitespace-pre-wrap">
-                {selectedProject.description}
+                {selected.description}
               </p>
             </div>
 
-            {/* Additional Project Details */}
-            {selectedProject.techStack && selectedProject.techStack.length > 0 && (
+            {/* Additional  Details */}
+            {selected.techStack && selected.techStack.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Technologies</h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedProject.techStack.map((tech, index) => (
+                  {selected.techStack.map((tech, index) => (
                     <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
                       {tech}
                     </span>
@@ -202,22 +202,22 @@ const ProjectRecommender = () => {
               </div>
             )}
 
-            {selectedProject.learningOutcomes && selectedProject.learningOutcomes.length > 0 && (
+            {selected.learningOutcomes && selected.learningOutcomes.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Learning Outcomes</h3>
                 <ul className="list-disc list-inside space-y-1">
-                  {selectedProject.learningOutcomes.map((outcome, index) => (
+                  {selected.learningOutcomes.map((outcome, index) => (
                     <li key={index} className="text-gray-600 text-sm">{outcome}</li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {selectedProject.implementationSteps && selectedProject.implementationSteps.length > 0 && (
+            {selected.implementationSteps && selected.implementationSteps.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Implementation Steps</h3>
                 <ol className="list-decimal list-inside space-y-1">
-                  {selectedProject.implementationSteps.map((step, index) => (
+                  {selected.implementationSteps.map((step, index) => (
                     <li key={index} className="text-gray-600 text-sm">{step}</li>
                   ))}
                 </ol>
@@ -228,24 +228,24 @@ const ProjectRecommender = () => {
       </Modal>
 
       {/* Empty State */}
-      {projects.length === 0 && !loading && (
+      {s.length === 0 && !loading && (
         <div className="text-center py-16 bg-white rounded-xl border">
           <div className="mb-4">
             <Search className="h-12 w-12 text-gray-400 mx-auto" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No projects found</h3>
-          <p className="text-gray-600">Try adjusting your search terms or browse all projects</p>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">No s found</h3>
+          <p className="text-gray-600">Try adjusting your search terms or browse all s</p>
           {isSearching && (
             <Button 
               variant="outline" 
               onClick={() => {
                 setPrompt('');
                 setIsSearching(false);
-                fetchAllProjects();
+                fetchAlls();
               }}
               className="mt-4"
             >
-              View All Projects
+              View All s
             </Button>
           )}
         </div>
@@ -254,4 +254,4 @@ const ProjectRecommender = () => {
   );
 };
 
-export default ProjectRecommender;
+export default Recommender;
