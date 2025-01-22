@@ -1,11 +1,13 @@
 export interface Project {
   id: number;
   title: string;
-  url: string;
   description: string;
-  solutions: string;
-  created_at: string;
-  updated_at: string;
+  difficulty?: string;
+  estimatedHours?: number;
+  techStack?: string[];
+  learningOutcomes?: string[];
+  implementationSteps?: string[];
+  isAiGenerated?: boolean;
 }
 
 export interface RecommendationRequest {

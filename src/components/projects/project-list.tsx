@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ProjectCard } from './project-card';
 import { ProjectDetails } from './project-details';
-import { Project, getProjects } from '@/lib/api';
+import { Project } from '@/types/api';  // Move type to types folder
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 
@@ -20,7 +20,9 @@ export function ProjectList() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const data = await getProjects();
+        const response = await fetch('/api/projects');
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
         setProjects(data);
       } catch (err) {
         setError('Failed to load projects. Please try again later.');
