@@ -7,7 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Modal } from '@/components/ui/modal';
 import { Loader2, Search, ArrowRight } from 'lucide-react';
-import type { Project } from '@/types/api';
+
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  difficulty?: string;
+  estimatedHours?: number;
+  techStack?: string[];
+  learningOutcomes?: string[];
+  implementationSteps?: string[];
+  solutions?: string;
+  isAiGenerated?: boolean;
+  url?: string;
+  created_at?: string;
+}
 
 const ProjectRecommender = () => {
   const [prompt, setPrompt] = useState('');
@@ -173,14 +187,40 @@ const ProjectRecommender = () => {
                 {selectedProject.description}
               </p>
             </div>
-            {selectedProject.solutions && (
+
+            {/* Additional Project Details */}
+            {selectedProject.techStack && selectedProject.techStack.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold mb-2">Solutions</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-600 text-sm whitespace-pre-wrap">
-                    {selectedProject.solutions}
-                  </p>
+                <h3 className="text-lg font-semibold mb-2">Technologies</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProject.techStack.map((tech, index) => (
+                    <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                      {tech}
+                    </span>
+                  ))}
                 </div>
+              </div>
+            )}
+
+            {selectedProject.learningOutcomes && selectedProject.learningOutcomes.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Learning Outcomes</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {selectedProject.learningOutcomes.map((outcome, index) => (
+                    <li key={index} className="text-gray-600 text-sm">{outcome}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selectedProject.implementationSteps && selectedProject.implementationSteps.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Implementation Steps</h3>
+                <ol className="list-decimal list-inside space-y-1">
+                  {selectedProject.implementationSteps.map((step, index) => (
+                    <li key={index} className="text-gray-600 text-sm">{step}</li>
+                  ))}
+                </ol>
               </div>
             )}
           </div>
