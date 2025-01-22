@@ -4,7 +4,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
+interface RawProjectSuggestion {
+  title?: string;
+  description?: string;
+  difficulty?: string;
+  estimatedHours?: number;
+  techStack?: string[];
+  learningOutcomes?: string[];
+  implementationSteps?: string[];
+}
+
 interface ProjectSuggestion {
+  id: string;
   title: string;
   description: string;
   difficulty: string;
@@ -12,6 +23,11 @@ interface ProjectSuggestion {
   techStack: string[];
   learningOutcomes: string[];
   implementationSteps: string[];
+}
+
+interface GeminiResponse {
+  intro: string;
+  projects: RawProjectSuggestion[];
 }
 
 export async function generateAIProjects(prompt: string): Promise<{ intro: string; projects: ProjectSuggestion[] }> {
@@ -48,7 +64,7 @@ Note: Respond ONLY with the JSON. Do not add any other text before or after.`;
 
     try {
       // First, try parsing the cleaned text directly
-      const parsedResponse = JSON.parse(cleanedText);
+      const parsedResponse = JSON.parse(cleanedText) as GeminiResponse;
       
       // Validate the structure
       if (!parsedResponse.intro || !Array.isArray(parsedResponse.projects)) {
@@ -56,7 +72,7 @@ Note: Respond ONLY with the JSON. Do not add any other text before or after.`;
       }
 
       // Map and validate each project
-      const validatedProjects = parsedResponse.projects.map(project => ({
+      const validatedProjects: ProjectSuggestion[] = parsedResponse.projects.map((project: RawProjectSuggestion) => ({
         id: `ai-${Math.random().toString(36).substr(2, 9)}`,
         title: project.title || 'Project Suggestion',
         description: project.description || 'No description provided',
