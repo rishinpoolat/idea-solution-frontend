@@ -7,10 +7,10 @@ import { Project } from '@/lib/api';
 
 interface ProjectCardProps {
   project: Project;
-  onViewDetails: (projectId: number) => void;
+  onClick: (project: Project) => void;
 }
 
-export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
+export function ProjectCard({ project, onClick }: ProjectCardProps) {
   // Truncate description to first 100 characters
   const truncatedDescription = project.description 
     ? project.description.slice(0, 100) + (project.description.length > 100 ? '...' : '')
@@ -29,11 +29,26 @@ export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
         )}
       </CardHeader>
       
+      <CardContent className="flex-grow">
+        {project.techStack && project.techStack.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {project.techStack.map((tech, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        )}
+      </CardContent>
+      
       <CardFooter className="mt-auto pt-4">
         <Button 
           size="sm" 
           className="flex items-center gap-2 ml-auto"
-          onClick={() => onViewDetails(project.id)}
+          onClick={() => onClick(project)}
         >
           View More
           <ChevronRight className="w-4 h-4" />

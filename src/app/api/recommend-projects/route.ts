@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
+import { generateAIProjects } from '@/lib/gemini';
 import type { RecommendationRequest } from '@/types/api';
 
 export async function POST(req: NextRequest) {
@@ -13,39 +14,85 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Format search term for text search - replace spaces with &
     const searchTerm = body.prompt.toLowerCase().trim();
+    const formattedSearchTerm = searchTerm
+      .split(' ')
+      .filter(term => term.length > 0)
+      .join(' & ');
 
-    // Query using text search on the materialized view
-    const { data: projects, error } = await supabase
-      .from('project_materialized_view')
-      .select('*')
-      .textSearch('search_vector', searchTerm, {
-        type: 'plain' // Use plain to match individual words
-      })
-      .limit(6);
+    // Get both AI suggestions and database recommendations
+    const [aiResponse, dbResults] = await Promise.all([
+      generateAIProjects(body.prompt),
+      (async () => {
+        try {
+          // Try text search first
+          const { data: projects, error } = await supabase
+            .from('project_materialized_view')
+            .select('*')
+            .textSearch('search_vector', formattedSearchTerm)
+            .limit(3);
 
-    if (error) {
-      console.error('Search error:', error);
-      throw error;
-    }
+          if (error) {
+            console.error('Text search error:', error);
+            // On text search error, fall back to ILIKE
+            const { data: fallbackProjects, error: fallbackError } = await supabase
+              .from('project_materialized_view')
+              .select('*')
+              .or(
+                searchTerm.split(' ').map(term => 
+                  `title.ilike.%${term}%,description.ilike.%${term}%,solutions.ilike.%${term}%`
+                ).join(',')
+              )
+              .limit(3);
 
-    // If no results with text search, try fallback with ILIKE
-    if (!projects || projects.length === 0) {
-      const { data: fallbackProjects, error: fallbackError } = await supabase
-        .from('project_materialized_view')
-        .select('*')
-        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,solutions.ilike.%${searchTerm}%`)
-        .limit(6);
+            if (fallbackError) throw fallbackError;
+            return fallbackProjects || [];
+          }
 
-      if (fallbackError) throw fallbackError;
-      return NextResponse.json({ projects: fallbackProjects || [] });
-    }
+          // If no results from text search, try ILIKE
+          if (!projects || projects.length === 0) {
+            const { data: fallbackProjects, error: fallbackError } = await supabase
+              .from('project_materialized_view')
+              .select('*')
+              .or(
+                searchTerm.split(' ').map(term => 
+                  `title.ilike.%${term}%,description.ilike.%${term}%,solutions.ilike.%${term}%`
+                ).join(',')
+              )
+              .limit(3);
 
-    return NextResponse.json({ projects });
+            if (fallbackError) throw fallbackError;
+            return fallbackProjects || [];
+          }
+
+          return projects;
+        } catch (error) {
+          console.error('Database search error:', error);
+          // If all fails, try a simple ILIKE on each word
+          const { data: simpleProjects, error: simpleError } = await supabase
+            .from('project_materialized_view')
+            .select('*')
+            .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+            .limit(3);
+
+          if (simpleError) throw simpleError;
+          return simpleProjects || [];
+        }
+      })()
+    ]);
+
+    // Return both AI suggestions and database recommendations
+    return NextResponse.json({
+      intro: aiResponse.intro,
+      aiSuggestions: aiResponse.projects,
+      recommendations: dbResults
+    });
+
   } catch (error) {
     console.error('Error in project recommendation:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to get project suggestions' },
       { status: 500 }
     );
   }

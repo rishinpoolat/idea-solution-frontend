@@ -1,16 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Brain, Clock, Bookmark } from 'lucide-react';
-import { Project } from '@/lib/api';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Project } from "@/lib/api";
 
 interface ProjectDetailsProps {
   project: Project | null;
@@ -19,83 +18,104 @@ interface ProjectDetailsProps {
 }
 
 export function ProjectDetails({ project, open, onOpenChange }: ProjectDetailsProps) {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
   if (!project) return null;
+
+  // Truncate description if it's too long
+  const MAX_LENGTH = 250;
+  const isLongDescription = project.description && project.description.length > MAX_LENGTH;
+  const displayDescription = showFullDescription ? project.description : 
+    isLongDescription ? project.description.slice(0, MAX_LENGTH) + '...' : project.description;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">{project.title}</DialogTitle>
-            {project.difficulty && (
-              <Badge variant="outline">{project.difficulty}</Badge>
-            )}
-          </div>
+          <DialogTitle className="text-xl font-bold">
+            {project.title}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
-          {/* Project Description */}
-          {project.description && (
-            <div className="prose dark:prose-invert max-w-none">
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{project.description}</p>
-            </div>
-          )}
-
-          {/* Project Stats */}
-          <div className="flex flex-wrap gap-4 items-center text-sm">
-            {project.estimated_hours && (
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{project.estimated_hours} hours estimated</span>
-              </div>
-            )}
-            {project.reasoning_score && (
-              <div className="flex items-center gap-1">
-                <Brain className="w-4 h-4" />
-                <span>AI Reasoning Score: {project.reasoning_score}%</span>
-              </div>
-            )}
+        <div className="space-y-4 py-4">
+          {/* Description Section */}
+          <div>
+            <h3 className="font-medium mb-2">Description</h3>
+            <p>
+              {displayDescription}
+              {isLongDescription && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="ml-2"
+                >
+                  {showFullDescription ? (
+                    <>Show Less <ChevronUp className="ml-1 h-4 w-4" /></>
+                  ) : (
+                    <>Show More <ChevronDown className="ml-1 h-4 w-4" /></>
+                  )}
+                </Button>
+              )}
+            </p>
           </div>
 
-          {/* Technologies */}
-          {project.technologies && project.technologies.length > 0 && (
+          {/* Tech Stack Section */}
+          {project.techStack && project.techStack.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold mb-2">Technologies Used</h3>
+              <h3 className="font-medium mb-2">Technologies</h3>
               <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech) => (
-                  <Badge key={tech} variant="secondary">
+                {project.techStack.map((tech, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                  >
                     {tech}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Project Solution */}
-          <div className="prose dark:prose-invert max-w-none">
-            <h3 className="text-lg font-semibold mb-2">Solution Approach</h3>
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-muted-foreground">
-                Here's how you can approach this project:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Plan and outline the project requirements</li>
-                <li>Set up the development environment</li>
-                <li>Implement core functionality</li>
-                <li>Add necessary features and improvements</li>
-                <li>Test and refine the implementation</li>
-              </ul>
-            </div>
+          {/* Difficulty and Time Estimate */}
+          <div className="flex gap-6">
+            {project.difficulty && (
+              <div>
+                <h3 className="font-medium mb-1">Difficulty</h3>
+                <p>{project.difficulty}</p>
+              </div>
+            )}
+            {project.estimatedHours && (
+              <div>
+                <h3 className="font-medium mb-1">Estimated Time</h3>
+                <p>{project.estimatedHours} hours</p>
+              </div>
+            )}
           </div>
 
-          {/* Action Button */}
-          <div className="flex justify-end pt-4">
-            <Button className="flex items-center gap-2">
-              <Bookmark className="w-4 h-4" />
-              Save Project
-            </Button>
-          </div>
+          {/* Learning Outcomes - Only for AI Generated Projects */}
+          {project.learningOutcomes && project.learningOutcomes.length > 0 && (
+            <div>
+              <h3 className="font-medium mb-2">Learning Outcomes</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {project.learningOutcomes.map((outcome, index) => (
+                  <li key={index}>{outcome}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Implementation Steps - Only for AI Generated Projects */}
+          {project.implementationSteps && project.implementationSteps.length > 0 && (
+            <div>
+              <h3 className="font-medium mb-2">Implementation Steps</h3>
+              <ol className="list-decimal list-inside space-y-1">
+                {project.implementationSteps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
