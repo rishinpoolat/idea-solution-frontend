@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './db';
 
 export interface Project {
   id: number;
@@ -14,7 +14,7 @@ export interface Project {
 
 export async function getProjects(): Promise<Project[]> {
   const { data, error } = await supabase
-    .from('projects')
+    .from('project_materialized_view')  // Updated to use the correct table
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -28,28 +28,13 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getProjectById(id: number): Promise<Project | null> {
   const { data, error } = await supabase
-    .from('projects')
+    .from('project_materialized_view')  // Updated to use the correct table
     .select('*')
     .eq('id', id)
     .single();
 
   if (error) {
     console.error('Error fetching project:', error);
-    throw error;
-  }
-
-  return data;
-}
-
-export async function createProjectPrompt(prompt: string) {
-  const { data, error } = await supabase
-    .from('project_prompts')
-    .insert([{ prompt }])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating project prompt:', error);
     throw error;
   }
 
