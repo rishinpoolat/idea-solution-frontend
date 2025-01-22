@@ -3,16 +3,20 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Send, Loader2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Send, Loader2, ChevronRight } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { Project } from '@/types/api';
+import { ProjectCard } from './project-card';
+import { ProjectDetails } from './project-details';
 
 export function ProjectPrompt() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +50,12 @@ export function ProjectPrompt() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewDetails = (projectId: number) => {
+    const project = recommendations.find(p => p.id === projectId) || null;
+    setSelectedProject(project);
+    setDetailsOpen(true);
   };
 
   return (
@@ -84,33 +94,23 @@ export function ProjectPrompt() {
       {recommendations.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl font-semibold">Recommended Projects</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recommendations.map((project) => (
-              <Card key={project.id} className="p-4">
-                <h4 className="font-medium">{project.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{project.description}</p>
-                {project.technologies && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {project.technologies.map((tech) => (
-                      <span 
-                        key={tech}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {project.difficulty && (
-                  <div className="mt-2 text-sm text-gray-500">
-                    Difficulty: {project.difficulty}
-                  </div>
-                )}
-              </Card>
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onViewDetails={handleViewDetails}
+              />
             ))}
           </div>
         </div>
       )}
+
+      <ProjectDetails
+        project={selectedProject}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   );
 }

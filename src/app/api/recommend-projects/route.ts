@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as RecommendationRequest;
     
-    
     if (!body.prompt) {
       return NextResponse.json(
         { error: 'Prompt is required' },
@@ -14,64 +13,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extract meaningful keywords and create search terms
-    const searchTerms = body.prompt
-      .toLowerCase()
-      .split(/[\s,.|&]+/) // Split on multiple delimiters
-      .filter(term => {
-        // Filter out common words and short terms
-        const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'is', 'are', 'with']);
-        return term.length > 2 && !commonWords.has(term);
-      })
-      .map(term => {
-        // Clean up terms and handle common variations
-        term = term.replace(/[^\w\s]/g, '');
-        // Add common variations (e.g., 'python' should match 'python3')
-        const variations = new Map([
-          ['javascript', ['js', 'node', 'nodejs']],
-          ['python', ['python3', 'py']],
-          ['typescript', ['ts']],
-          ['react', ['reactjs', 'react.js']],
-          // Add more variations as needed
-        ]);
-        
-        if (variations.has(term)) {
-          return `(${[term, ...variations.get(term)!].join(' | ')})`;
-        }
-        return term;
-      })
-      .join(' & ');
+    const searchTerm = body.prompt.toLowerCase().trim();
 
-    // First try exact matches
-    let { data: projects, error } = await supabase
+    // Query using text search on the materialized view
+    const { data: projects, error } = await supabase
       .from('project_materialized_view')
       .select('*')
-      .textSearch('search_vector', searchTerms, {
-        type: 'websearch',
-        config: 'english'
+      .textSearch('search_vector', searchTerm, {
+        type: 'plain' // Use plain to match individual words
       })
-      .limit(6)
-      .order('created_at', { ascending: false });
+      .limit(6);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
 
-    // If no exact matches, try fuzzy search
+    // If no results with text search, try fallback with ILIKE
     if (!projects || projects.length === 0) {
-      const terms = searchTerms.split(' & ').map(term => term.replace(/[()]/g, ''));
-      const fuzzyQuery = terms.map(term => `%${term}%`).join(' | ');
-      
-      const { data: fuzzyProjects, error: fuzzyError } = await supabase
+      const { data: fallbackProjects, error: fallbackError } = await supabase
         .from('project_materialized_view')
         .select('*')
-        .or(
-          terms.map(term => `title.ilike.%${term}%,description.ilike.%${term}%`)
-          .join(',')
-        )
-        .limit(6)
-        .order('created_at', { ascending: false });
+        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,solutions.ilike.%${searchTerm}%`)
+        .limit(6);
 
-      if (fuzzyError) throw fuzzyError;
-      projects = fuzzyProjects;
+      if (fallbackError) throw fallbackError;
+      return NextResponse.json({ projects: fallbackProjects || [] });
     }
 
     return NextResponse.json({ projects });
