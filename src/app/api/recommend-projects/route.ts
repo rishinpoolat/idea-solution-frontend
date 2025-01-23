@@ -30,7 +30,10 @@ export async function POST(req: NextRequest) {
           const { data: projects, error } = await supabase
             .from('project_materialized_view')
             .select('*')
-            .textSearch('search_vector', formattedSearchTerm)
+            .textSearch('search_vector', formattedSearchTerm, {
+            config: 'english',
+            type: 'websearch'
+          })
             .limit(3);
 
           if (error) {
